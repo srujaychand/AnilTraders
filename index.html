@@ -194,7 +194,7 @@
     const products = [
       { id: 1, name: 'Organic Fertilizer', price: 250, img: 'https://blog.bccresearch.com/hubfs/organic-fertilizers-industry.webp' },
       { id: 2, name: 'Tractor Oil', price: 500, img: 'https://5.imimg.com/data5/SELLER/Default/2024/10/455162362/TO/AY/KE/182603743/gulfast-tractor-oil-500x500.jpg' },
-      { id: 3, name: 'Hybrid Seeds', price: 150, img: 'https://fsii.in/wp-content/uploads/2021/02/Rc18856631_g.jpg' },
+      { id: 3, name: 'Hybrid Seeds', price: 150, img: 'https://www.allassignmenthelp.com/blog/wp-content/uploads/2023/10/Hybrid-Seeds-2-1.png' },
       { id: 4, name: 'Irrigation Kit', price: 1200, img: 'https://hasthip.com/cdn/shop/files/71eBRC8x41L.jpg?v=1732882025' },
     ];
 
@@ -218,26 +218,58 @@
       productGrid.appendChild(div);
     });
 
+    // function updateCartView() {
+    //   cartItems.innerHTML = '';
+    //   let total = 0;
+    //   Object.values(cart).forEach(item => {
+    //     total += item.price * item.qty;
+    //     const div = document.createElement('div');
+    //     div.className = 'cart-item';
+    //     div.innerHTML = `
+    //       <span>${item.name}</span>
+    //       <div class="qty-controls">
+    //         <button onclick="changeQty(${item.id}, -1)">-</button>
+    //         <span>${item.qty}</span>
+    //         <button onclick="changeQty(${item.id}, 1)">+</button>
+    //       </div>
+    //     `;
+    //     cartItems.appendChild(div);
+    //   });
+    //   totalPrice.textContent = total;
+    //   cartCount.textContent = Object.values(cart).reduce((s, i) => s + i.qty, 0);
+    // }
+
     function updateCartView() {
-      cartItems.innerHTML = '';
-      let total = 0;
-      Object.values(cart).forEach(item => {
-        total += item.price * item.qty;
-        const div = document.createElement('div');
-        div.className = 'cart-item';
-        div.innerHTML = `
-          <span>${item.name}</span>
-          <div class="qty-controls">
-            <button onclick="changeQty(${item.id}, -1)">-</button>
-            <span>${item.qty}</span>
-            <button onclick="changeQty(${item.id}, 1)">+</button>
-          </div>
-        `;
-        cartItems.appendChild(div);
-      });
-      totalPrice.textContent = total;
-      cartCount.textContent = Object.values(cart).reduce((s, i) => s + i.qty, 0);
-    }
+  cartItems.innerHTML = '';
+  let total = 0;
+
+  Object.values(cart).forEach(item => {
+    const itemTotal = item.price * item.qty;
+    total += itemTotal;
+
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    div.innerHTML = `
+      <div style="flex:1;">
+        <strong>${item.name}</strong><br>
+        <small>₹${item.price} × ${item.qty} = <strong>₹${itemTotal}</strong></small>
+      </div>
+      <div class="qty-controls">
+        <button onclick="changeQty(${item.id}, -1)">-</button>
+        <span>${item.qty}</span>
+        <button onclick="changeQty(${item.id}, 1)">+</button>
+      </div>
+    `;
+    cartItems.appendChild(div);
+  });
+
+  totalPrice.textContent = total.toFixed(2);
+  cartCount.textContent = Object.values(cart).reduce((s, i) => s + i.qty, 0);
+
+  if (Object.keys(cart).length === 0) {
+    cartItems.innerHTML = '<p style="text-align:center; color:#777;">Your cart is empty.</p>';
+  }
+}
 
     function addToCart(id) {
       const product = products.find(p => p.id === id);
@@ -282,6 +314,12 @@
       alert('Order placed! Redirecting to your email...');
       cartModal.classList.add('hidden');
     };
+    window.addEventListener("beforeunload", function (event) {
+  if (Object.keys(cart).length > 0) {
+    event.preventDefault();
+    event.returnValue = "Your cart will be lost if you leave this page.";
+  }
+});
   </script>
 </body>
 </html>
