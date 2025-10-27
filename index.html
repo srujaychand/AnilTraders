@@ -53,6 +53,10 @@
       border-radius: 10px;
       text-align: center;
       box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    .product:hover {
+      transform: scale(1.03);
     }
     .product img {
       width: 100%;
@@ -82,6 +86,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      z-index: 10;
     }
     .cart-content {
       background: white;
@@ -130,6 +135,35 @@
       background: #999;
       margin-top: 10px;
     }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 20px;
+      background: #228b22;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.4s ease;
+      z-index: 999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+      }
+      .cart-content {
+        width: 90%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -157,9 +191,10 @@
     </div>
   </div>
 
-    <footer>
+  <div class="toast" id="toast">Item added to cart!</div>
+
+  <footer>
     <div style="display: flex; flex-wrap: wrap; justify-content: space-around; text-align: left; padding: 20px; max-width: 1000px; margin: auto;">
-      
       <div style="flex: 1 1 200px; margin: 10px;">
         <h3 style="color:#228b22;">🏪 Anil Traders - Agritech</h3>
         <p>Supplying high-quality fertilizers, seeds, and farming equipment for sustainable agriculture.</p>
@@ -182,13 +217,11 @@
           <strong>Hours:</strong> Mon–Sat, 9 AM – 7 PM
         </p>
       </div>
-
     </div>
     <div style="background:#e6f3e6; text-align:center; padding:10px; font-size:14px; color:#555;">
       © 2025 Anil Traders - Agritech Company | Growing with Technology 🌿
     </div>
   </footer>
-
 
   <script>
     const products = [
@@ -198,12 +231,23 @@
       { id: 4, name: 'Irrigation Kit', price: 1200, img: 'https://hasthip.com/cdn/shop/files/71eBRC8x41L.jpg?v=1732882025' },
     ];
 
-    const cart = {};
+    let cart = {};
+
     const productGrid = document.getElementById('productGrid');
     const cartModal = document.getElementById('cartModal');
     const cartCount = document.getElementById('cartCount');
     const cartItems = document.getElementById('cartItems');
     const totalPrice = document.getElementById('totalPrice');
+    const toast = document.getElementById('toast');
+
+    // Load cart from localStorage
+    window.onload = () => {
+      const savedCart = localStorage.getItem('cartData');
+      if (savedCart) {
+        cart = JSON.parse(savedCart);
+        updateCartView();
+      }
+    };
 
     // Render products
     products.forEach(p => {
@@ -218,58 +262,44 @@
       productGrid.appendChild(div);
     });
 
-    // function updateCartView() {
-    //   cartItems.innerHTML = '';
-    //   let total = 0;
-    //   Object.values(cart).forEach(item => {
-    //     total += item.price * item.qty;
-    //     const div = document.createElement('div');
-    //     div.className = 'cart-item';
-    //     div.innerHTML = `
-    //       <span>${item.name}</span>
-    //       <div class="qty-controls">
-    //         <button onclick="changeQty(${item.id}, -1)">-</button>
-    //         <span>${item.qty}</span>
-    //         <button onclick="changeQty(${item.id}, 1)">+</button>
-    //       </div>
-    //     `;
-    //     cartItems.appendChild(div);
-    //   });
-    //   totalPrice.textContent = total;
-    //   cartCount.textContent = Object.values(cart).reduce((s, i) => s + i.qty, 0);
-    // }
+    function showToast() {
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
 
     function updateCartView() {
-  cartItems.innerHTML = '';
-  let total = 0;
+      cartItems.innerHTML = '';
+      let total = 0;
 
-  Object.values(cart).forEach(item => {
-    const itemTotal = item.price * item.qty;
-    total += itemTotal;
+      Object.values(cart).forEach(item => {
+        const itemTotal = item.price * item.qty;
+        total += itemTotal;
 
-    const div = document.createElement('div');
-    div.className = 'cart-item';
-    div.innerHTML = `
-      <div style="flex:1;">
-        <strong>${item.name}</strong><br>
-        <small>₹${item.price} × ${item.qty} = <strong>₹${itemTotal}</strong></small>
-      </div>
-      <div class="qty-controls">
-        <button onclick="changeQty(${item.id}, -1)">-</button>
-        <span>${item.qty}</span>
-        <button onclick="changeQty(${item.id}, 1)">+</button>
-      </div>
-    `;
-    cartItems.appendChild(div);
-  });
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+          <div style="flex:1;">
+            <strong>${item.name}</strong><br>
+            <small>₹${item.price} × ${item.qty} = <strong>₹${itemTotal}</strong></small>
+          </div>
+          <div class="qty-controls">
+            <button onclick="changeQty(${item.id}, -1)">-</button>
+            <span>${item.qty}</span>
+            <button onclick="changeQty(${item.id}, 1)">+</button>
+          </div>
+        `;
+        cartItems.appendChild(div);
+      });
 
-  totalPrice.textContent = total.toFixed(2);
-  cartCount.textContent = Object.values(cart).reduce((s, i) => s + i.qty, 0);
+      totalPrice.textContent = total.toFixed(2);
+      cartCount.textContent = Object.values(cart).reduce((s, i) => s + i.qty, 0);
 
-  if (Object.keys(cart).length === 0) {
-    cartItems.innerHTML = '<p style="text-align:center; color:#777;">Your cart is empty.</p>';
-  }
-}
+      if (Object.keys(cart).length === 0) {
+        cartItems.innerHTML = '<p style="text-align:center; color:#777;">Your cart is empty.</p>';
+      }
+
+      localStorage.setItem('cartData', JSON.stringify(cart));
+    }
 
     function addToCart(id) {
       const product = products.find(p => p.id === id);
@@ -279,6 +309,7 @@
         cart[id].qty++;
       }
       updateCartView();
+      showToast();
     }
 
     function changeQty(id, delta) {
@@ -301,25 +332,25 @@
         alert('Please fill in all details.');
         return;
       }
-
+      
+      if(Object.keys(cart).length === 0) {
+        alert('Your cart is empty.');
+        return;
+      }
       const orderSummary = Object.values(cart)
         .map(item => `${item.name} (x${item.qty}) = ₹${item.price * item.qty}`)
-        .join('\\n');
+        .join('%0A');
       const total = totalPrice.textContent;
 
-      // Simulate sending email
-      const mailto = `mailto:shopmail@example.com?subject=New Order from ${name}&body=Order Details:%0A${orderSummary}%0ATotal: ₹${total}%0AName: ${name}%0AEmail: ${email}%0AAddress: ${address}`;
+      const mailto = `mailto:dummy@gmail.com?subject=New Order from ${name}&body=Order Details:%0A${orderSummary}%0A%0ATotal: ₹${total}%0AName: ${name}%0AEmail: ${email}%0AAddress: ${address}`;
       window.location.href = mailto;
 
       alert('Order placed! Redirecting to your email...');
+      cart = {};
+      localStorage.removeItem('cartData');
+      updateCartView();
       cartModal.classList.add('hidden');
     };
-    window.addEventListener("beforeunload", function (event) {
-  if (Object.keys(cart).length > 0) {
-    event.preventDefault();
-    event.returnValue = "Your cart will be lost if you leave this page.";
-  }
-});
   </script>
 </body>
 </html>
