@@ -135,8 +135,6 @@
       background: #999;
       margin-top: 10px;
     }
-
-    /* Toast notification */
     .toast {
       position: fixed;
       bottom: 30px;
@@ -154,7 +152,6 @@
       opacity: 1;
       transform: translateY(0);
     }
-
     @media (max-width: 600px) {
       header {
         flex-direction: column;
@@ -186,7 +183,7 @@
       <input type="text" id="custName" placeholder="Your Name" />
       <input type="email" id="custEmail" placeholder="Your Email" />
       <textarea id="custAddress" placeholder="Delivery Address"></textarea>
-      <button id="checkoutBtn">Proceed to Purchase</button>
+      <button id="checkoutBtn">Send Order via WhatsApp</button>
       <button class="close-btn" id="closeCart">Close</button>
     </div>
   </div>
@@ -199,7 +196,6 @@
         <h3 style="color:#228b22;">🏪 Anil Traders - Agritech</h3>
         <p>Supplying high-quality fertilizers, seeds, and farming equipment for sustainable agriculture.</p>
       </div>
-
       <div style="flex: 1 1 200px; margin: 10px;">
         <h4 style="color:#228b22;">📍 Branches</h4>
         <p>
@@ -208,7 +204,6 @@
           <strong>Medak:</strong> Opp. Bus Stand, Telangana
         </p>
       </div>
-
       <div style="flex: 1 1 200px; margin: 10px;">
         <h4 style="color:#228b22;">📞 Contact Us</h4>
         <p>
@@ -240,7 +235,6 @@
     const totalPrice = document.getElementById('totalPrice');
     const toast = document.getElementById('toast');
 
-    // Load cart from localStorage
     window.onload = () => {
       const savedCart = localStorage.getItem('cartData');
       if (savedCart) {
@@ -249,7 +243,7 @@
       }
     };
 
-    // Render products
+    // render product cards
     products.forEach(p => {
       const div = document.createElement('div');
       div.className = 'product';
@@ -274,7 +268,6 @@
       Object.values(cart).forEach(item => {
         const itemTotal = item.price * item.qty;
         total += itemTotal;
-
         const div = document.createElement('div');
         div.className = 'cart-item';
         div.innerHTML = `
@@ -323,6 +316,19 @@
     document.getElementById('openCart').onclick = () => cartModal.classList.remove('hidden');
     document.getElementById('closeCart').onclick = () => cartModal.classList.add('hidden');
 
+    const encryptedNumber = "OTE4Mzc0MTMzMTI0dHJhZGVyc2FuaWw="; 
+
+    function decryptNumber(encrypted) {
+      try {
+        const decoded = atob(encrypted);
+        return decoded.substring(0, 12); 
+      } catch {
+        return "0"; // Fallback number if decryption fails
+      }
+    }
+
+    const whatsappNumber = decryptNumber(encryptedNumber);
+
     document.getElementById('checkoutBtn').onclick = () => {
       const name = document.getElementById('custName').value.trim();
       const email = document.getElementById('custEmail').value.trim();
@@ -332,20 +338,27 @@
         alert('Please fill in all details.');
         return;
       }
-      
-      if(Object.keys(cart).length === 0) {
+
+      if (Object.keys(cart).length === 0) {
         alert('Your cart is empty.');
         return;
       }
+
       const orderSummary = Object.values(cart)
         .map(item => `${item.name} (x${item.qty}) = ₹${item.price * item.qty}`)
         .join('%0A');
       const total = totalPrice.textContent;
 
-      const mailto = `mailto:dummy@gmail.com?subject=New Order from ${name}&body=Order Details:%0A${orderSummary}%0A%0ATotal: ₹${total}%0AName: ${name}%0AEmail: ${email}%0AAddress: ${address}`;
-      window.location.href = mailto;
+      const message = `🌾 *New Order Request*%0A%0A${orderSummary}%0A%0A*Total:* ₹${total}%0A%0A*Customer Details*%0AName: ${name}%0AEmail: ${email}%0AAddress: ${address}`;
 
-      alert('Order placed! Redirecting to your email...');
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const whatsappURL = isMobile
+        ? `https://wa.me/${whatsappNumber}?text=${message}`
+        : `https://web.whatsapp.com/send?phone=${whatsappNumber}&text=${message}`;
+
+      window.open(whatsappURL, "_blank");
+
+      alert('Opening WhatsApp to send your order...');
       cart = {};
       localStorage.removeItem('cartData');
       updateCartView();
